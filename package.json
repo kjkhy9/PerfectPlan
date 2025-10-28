@@ -1,0 +1,27 @@
+{
+  "name": "perfectplan",
+  "version": "1.0.0",
+  "description": "CS4090 Capstone PerfectPlan Project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kjkhy9/PerfectPlan.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/kjkhy9/PerfectPlan/issues"
+  },
+  "homepage": "https://github.com/kjkhy9/PerfectPlan#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-scripts": "^5.0.1"
+  }
+}
