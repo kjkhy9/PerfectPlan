@@ -1,6 +1,13 @@
+const express = require('express');
+const app = express();
+
 app.use(express.json());
 
 let planners = [];
+
+app.get('/api/planner', (req, res) => {
+  res.json(planners);
+});
 
 app.post('/api/planner', (req, res) => {
   const { name } = req.body;
@@ -9,3 +16,6 @@ app.post('/api/planner', (req, res) => {
   planners.push(newPlanner);
   res.json(newPlanner);
 });
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server listening on ${PORT}`));
