@@ -9,14 +9,15 @@ function App() {
   const [userName, setUserName] = useState('');
   const [groups, setGroups] = useState({ created: [], joined: [] });
 
-  // Handle form field updates
+  //event handler for all form inputs
+
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
   // --- SIGN UP ---
   const signup = async () => {
     try {
       await axios.post('http://localhost:5000/api/signup', form);
-      alert('Account created! You can now log in.');
+      alert('Account created');
       setView('login');
     } catch (err) {
       console.error(err);
@@ -116,6 +117,7 @@ function App() {
         <input type="password" name="password" placeholder="Password" onChange={handleChange} /><br />
         
         <button onClick={login}>Login</button>
+        <button onClick={() => setView('signup')}>Back</button>
       </div>
     );
 
@@ -143,6 +145,7 @@ function App() {
                 {g.name} ({g.inviteCode})
                 {g.members && g.members.length > 0 && (
                   <ul>
+                    <u>Members:</u>
                     {g.members.map(m => (
                       <li key={m._id}>{m.username}</li>
                     ))}
