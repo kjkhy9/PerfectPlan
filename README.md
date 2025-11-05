@@ -14,7 +14,7 @@ Simple student event coordination app (Express backend + React frontend).
 ## Setup (local)
 
 1. Git
--Clone this repository into your personal machine with git
+- Clone this repository into your personal machine with git
 
 2. Backend
 ```powershell
