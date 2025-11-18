@@ -1,17 +1,19 @@
 require('dotenv').config();
+console.log("Loaded MONGO_URI:", process.env.MONGO_URI);
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB using MONGO_URI from .env
-mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log('MongoDB connected'))
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+}).then(() => console.log('MongoDB connected'))
 .catch(err => console.error('MongoDB connection error:', err));
 
 // --- SCHEMAS ---
@@ -29,8 +31,17 @@ const groupSchema = new mongoose.Schema({
   members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 });
 
+const eventSchema = new mongoose.Schema({
+  groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true },
+  title: { type: String, required: true },
+  description: { type: String },
+  date: { type: Date, required: true },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+});
+
 const User = mongoose.model('User', userSchema);
 const Group = mongoose.model('Group', groupSchema);
+const Event = mongoose.model('Event', eventSchema);
 
 // --- ROUTES ---
 app.post('/api/signup', async (req, res) => {
@@ -94,6 +105,52 @@ app.get('/api/groups/user/:id', async (req, res) => {
 
   res.json({ created, joined });
 });
+
+// CREATE EVENT
+app.post('/api/events', async (req, res) => {
+  try {
+    const { groupId, title, description, date, userId } = req.body;
+
+    const event = await Event.create({
+      groupId,
+      title,
+      description,
+      date,
+      createdBy: new mongoose.Types.ObjectId(userId)
+    });
+
+    res.json(event);
+  } catch (err) {
+    console.error("Create event error:", err);
+    res.status(500).json({ message: "Server error creating event" });
+  }
+});
+
+// GET EVENTS FOR A GROUP
+app.get('/api/events/group/:groupId', async (req, res) => {
+  try {
+    const events = await Event.find({ groupId: req.params.groupId })
+      .populate("createdBy", "username")
+      .sort({ date: 1 });
+
+    res.json(events);
+  } catch (err) {
+    console.error("Fetch events error:", err);
+    res.status(500).json({ message: "Error fetching events" });
+  }
+});
+
+// DELETE EVENT
+app.delete('/api/events/:id', async (req, res) => {
+  try {
+    await Event.findByIdAndDelete(req.params.id);
+    res.json({ message: "Event deleted" });
+  } catch (err) {
+    console.error("Delete event error:", err);
+    res.status(500).json({ message: "Error deleting event" });
+  }
+});
+
 
 // --- START SERVER ---
 const PORT = process.env.PORT || 5000;
