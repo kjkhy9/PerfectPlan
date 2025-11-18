@@ -12,13 +12,13 @@ function App() {
   const [groups, setGroups] = useState({ created: [], joined: [] });
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [events, setEvents] = useState([]);
+  const [plannerEvents, setPlannerEvents] = useState([]);
+
 
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
   const handleEventChange = e => setEventForm({ ...eventForm, [e.target.name]: e.target.value });
 
-  // -------------------------
   // SIGNUP
-  // -------------------------
   const signup = async () => {
     try {
       await axios.post('http://localhost:5000/api/signup', form);
@@ -30,9 +30,7 @@ function App() {
     }
   };
 
-  // -------------------------
   // LOGIN
-  // -------------------------
   const login = async () => {
     try {
       const res = await axios.post('http://localhost:5000/api/login', form);
@@ -54,9 +52,7 @@ function App() {
     }
   };
 
-  // -------------------------
   // FETCH GROUPS
-  // -------------------------
   const fetchGroups = async (id) => {
     try {
       const res = await axios.get(`http://localhost:5000/api/groups/user/${id}`);
@@ -67,9 +63,7 @@ function App() {
     }
   };
 
-  // -------------------------
   // OPEN EVENTS PAGE
-  // -------------------------
   const openEventPage = async (group) => {
     try {
       setSelectedGroup(group);
@@ -83,9 +77,7 @@ function App() {
     }
   };
 
-  // -------------------------
   // CREATE EVENT
-  // -------------------------
   const createEvent = async () => {
     try {
       await axios.post("http://localhost:5000/api/events", {
@@ -107,9 +99,7 @@ function App() {
     }
   };
 
-  // -------------------------
   // CREATE GROUP
-  // -------------------------
   const createGroup = async () => {
     try {
       const res = await axios.post('http://localhost:5000/api/groups', {
@@ -124,9 +114,7 @@ function App() {
     }
   };
 
-  // -------------------------
   // JOIN GROUP
-  // -------------------------
   const joinGroup = async () => {
     try {
       await axios.post('http://localhost:5000/api/groups/join', { code: form.code, userId });
@@ -137,6 +125,41 @@ function App() {
       alert('Failed to join group');
     }
   };
+
+  const openMasterPlanner = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/events/user/${userId}`);
+      setPlannerEvents(res.data);
+      setView("master");
+    } catch (err) {
+      console.error(err);
+      alert("Could not load planner");
+    }
+  };
+
+
+  // LEAVE GROUP
+  const leaveGroup = async (groupId) => {
+    if (!userId) {
+      alert("You must be logged in.");
+      return;
+    }
+
+    try {
+      await axios.post("http://localhost:5000/api/groups/leave", {
+        groupId,
+        userId
+      });
+
+      alert("You left the group");
+
+      fetchGroups(userId);
+    } catch (err) {
+        console.error(err);
+        alert("Could not leave group");
+    }
+  };
+
 
   // -------------------------
   // VIEWS
@@ -181,7 +204,7 @@ function App() {
         <button onClick={joinGroup}>Join Group</button>
 
         <hr />
-
+        <button onClick={openMasterPlanner}>Open Master Planner</button>
         <h3>Your Created Groups</h3>
         <ul>
           {groups.created.length > 0 ? (
@@ -189,6 +212,7 @@ function App() {
               <li key={g._id}>
                 {g.name} ({g.inviteCode})
                 <button onClick={() => openEventPage(g)}>Events</button>
+                <button onClick={() => leaveGroup(g._id)}>Leave</button>
               </li>
             ))
           ) : (
@@ -203,13 +227,13 @@ function App() {
               <li key={g._id}>
                 {g.name}
                 <button onClick={() => openEventPage(g)}>Events</button>
+                <button onClick={() => leaveGroup(g._id)}>Leave</button>
               </li>
             ))
           ) : (
             <li>None yet</li>
           )}
         </ul>
-
         <button onClick={() => setView('login')}>Log Out</button>
       </div>
     );
@@ -245,6 +269,34 @@ function App() {
         <button onClick={() => setView("groups")}>Back</button>
       </div>
     );
+
+    if (view === "master")
+      return (
+      <div>
+        <h2>Master Planner</h2>
+        <h3>All Upcoming Events</h3>
+        <ul>
+          {plannerEvents.length > 0 ? (
+            plannerEvents.map(e => (
+              <li key={e._id}>
+                <b>{e.title}</b> — {new Date(e.date).toLocaleDateString()}
+                <br />
+                Group: {e.groupId?.name}
+                <br />
+                Created by: {e.createdBy?.username}
+                <br />
+                {e.description}
+              </li>
+            ))
+          ) : (
+            <li>No upcoming events</li>
+          )}
+        </ul>
+
+        <button onClick={() => setView("groups")}>Back</button>
+      </div>
+    );
+
 
   return null;
 }

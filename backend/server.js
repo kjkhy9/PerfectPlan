@@ -1,6 +1,4 @@
-require('dotenv').config();
-console.log("Loaded MONGO_URI:", process.env.MONGO_URI);
-const express = require('express');
+require('dotenv').config({ debug: true, override: true });const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
@@ -10,10 +8,8 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB using MONGO_URI from .env
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log('MongoDB connected'))
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log('MongoDB connected'))
 .catch(err => console.error('MongoDB connection error:', err));
 
 // --- SCHEMAS ---
@@ -93,6 +89,30 @@ app.post('/api/groups/join', async (req, res) => {
   res.json({ message: 'Joined group successfully', group });
 });
 
+app.post('/api/groups/leave', async (req, res) => {
+  try {
+    const { groupId, userId } = req.body;
+
+    const group = await Group.findById(groupId);
+    if (!group) return res.status(404).json({ message: "Group not found" });
+
+    // creator can't leave if there are other members
+    if (group.creator.toString() === userId && group.members.length > 1) {
+      return res.status(400).json({ message: "Creator cannot leave a group with members" });
+    }
+
+    // romving user from array
+    group.members = group.members.filter(id => id.toString() !== userId);
+    await group.save();
+
+    res.json({ message: "Left group successfully" });
+
+  } catch (err) {
+    console.error("Leave group error:", err);
+    res.status(500).json({ message: "Error leaving group" });
+  }
+});
+
 app.get('/api/groups/user/:id', async (req, res) => {
   const userId = req.params.id;
   const created = await Group.find({ creator: userId })
@@ -139,6 +159,30 @@ app.get('/api/events/group/:groupId', async (req, res) => {
     res.status(500).json({ message: "Error fetching events" });
   }
 });
+
+// GET ALL EVENTS FOR A USER (MASTER PLANNER)
+app.get('/api/events/user/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // find the groups user is in
+    const groups = await Group.find({ members: userId }).select("_id");
+
+    const groupIds = groups.map(g => g._id);
+
+    // grab the events
+    const events = await Event.find({ groupId: { $in: groupIds } })
+      .populate("createdBy", "username")
+      .populate("groupId", "name")
+      .sort({ date: 1 });
+
+    res.json(events);
+  } catch (err) {
+    console.error("Master planner fetch error:", err);
+    res.status(500).json({ message: "Error fetching planner events" });
+  }
+});
+
 
 // DELETE EVENT
 app.delete('/api/events/:id', async (req, res) => {
