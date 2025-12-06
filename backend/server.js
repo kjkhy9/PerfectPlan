@@ -27,6 +27,10 @@ const groupRoutesFactory = require('./routes/grouproutes');
 const eventRoutesFactory = require('./routes/eventroutes');
 
 const app = express();
+
+// Global middleware setup
+// - CORS: Allows frontend client (View) to access this backend API.
+// - express.json(): Parses JSON request bodies for all controllers.
 app.use(cors());
 app.use(express.json());
 
