@@ -1,0 +1,37 @@
+Folder structure of important folders in backend
+backend/
+│
+├── controllers/
+│     authcontroller.js
+│     groupcontroller.js
+│     eventcontroller.js
+│
+├── services/
+│     authservice.js
+│     groupservice.js
+│     eventservice.js
+│
+├── routes/
+│     authroutes.js
+│     grouproutes.js
+│     eventroutes.js
+│
+├── models/
+│     user.js
+│     group.js
+│     event.js
+│
+├── db.js
+├── server.js
+└── .env  (Not included in GitHub)
+
+All important logic for authentication of users, events, and group is in the services folder
+
+dependency order 
+
+Routes --> Controllers --> Services --> models
+
+3 different MongoDb tables 
+User, Group, and event
+
+The frontend React app communicates with the backend through api calls
