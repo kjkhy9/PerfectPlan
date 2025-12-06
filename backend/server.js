@@ -50,9 +50,9 @@ const groupController = groupControllerFactory(groupService);
 const eventController = eventControllerFactory(eventService);
 
 // Mount routes
-app.use('/api', authRoutesFactory(authController));          // /api/signup, /api/login
-app.use('/api/groups', groupRoutesFactory(groupController)); // /api/groups/...
-app.use('/api/events', eventRoutesFactory(eventController)); // /api/events/...
+app.use('/api', authRoutesFactory(authController));
+app.use('/api/groups', groupRoutesFactory(groupController)); 
+app.use('/api/events', eventRoutesFactory(eventController));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

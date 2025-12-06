@@ -35,3 +35,7 @@ Routes --> Controllers --> Services --> models
 User, Group, and event
 
 The frontend React app communicates with the backend through api calls
+
+db.js is what connects the system to MongoDB
+
+server.js is what connects all of the controllers, routes, services, and models to gether to send and recieve information to and from the frontend
