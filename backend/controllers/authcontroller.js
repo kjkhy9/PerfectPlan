@@ -13,6 +13,7 @@ function authController(authService) {
     },
 
     login: async (req, res) => {
+      console.log("LOGIN REQUEST BODY:", req.body);
       const { username, password } = req.body;
       try {
         const result = await authService.login(username, password);

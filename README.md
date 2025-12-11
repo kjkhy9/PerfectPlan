@@ -8,6 +8,7 @@ Simple student event coordination app (Express backend + React frontend).
 
 ## Prerequisites
 - Node.js (LTS) and npm
+- Socket.io and Socket.io-client
 - Git
 - A MongoDB URI (Atlas or local). Must be provided in `backend/.env`.
 

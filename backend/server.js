@@ -1,58 +1,123 @@
 // server.js
-require('dotenv').config({ debug: true, override: true });
+require("dotenv").config({ debug: true, override: true });
 
-const express = require('express');
-const cors = require('cors');
+const express = require("express");
+const cors = require("cors");
+const http = require("http");
+const { Server } = require("socket.io");
 
-const { connectToDatabase } = require('./db');
+const { connectToDatabase } = require("./db");
 
 // Models
-const User = require('./models/user');
-const Group = require('./models/group');
-const Event = require('./models/event');
+const User = require("./models/user");
+const Group = require("./models/group");
+const Event = require("./models/event");
+const Poll = require("./models/poll");
+
 
 // Services
-const AuthService = require('./services/authservice');
-const GroupService = require('./services/groupservice');
-const EventService = require('./services/eventservice');
+const AuthService = require("./services/authservice");
+const GroupService = require("./services/groupservice");
+const EventService = require("./services/eventservice");
+const PollService = require("./services/pollservice");
 
 // Controllers
-const authControllerFactory = require('./controllers/authcontroller');
-const groupControllerFactory = require('./controllers/groupcontroller');
-const eventControllerFactory = require('./controllers/eventcontroller');
+const authControllerFactory = require("./controllers/authcontroller");
+const groupControllerFactory = require("./controllers/groupcontroller");
+const eventControllerFactory = require("./controllers/eventcontroller");
+const pollControllerFactory = require("./controllers/pollcontroller");
 
 // Routes
-const authRoutesFactory = require('./routes/authroutes');
-const groupRoutesFactory = require('./routes/grouproutes');
-const eventRoutesFactory = require('./routes/eventroutes');
+const authRoutesFactory = require("./routes/authroutes");
+const groupRoutesFactory = require("./routes/grouproutes");
+const eventRoutesFactory = require("./routes/eventroutes");
+const pollRoutesFactory = require("./routes/pollroutes");
+
+
 
 const app = express();
-
-// Global middleware setup
-// - CORS: Allows frontend client (View) to access this backend API.
-// - express.json(): Parses JSON request bodies for all controllers.
 app.use(cors());
 app.use(express.json());
 
-// DB connection
+// -------------------------------
+// CONNECT TO DATABASE
+// -------------------------------
 connectToDatabase(process.env.MONGO_URI).catch((err) => {
-  console.error('MongoDB connection error:', err);
+  console.error("MongoDB connection error:", err);
 });
 
-// Build services
+// -------------------------------
+// BUILD SERVICES
+// -------------------------------
 const authService = new AuthService(User, process.env.JWT_SECRET);
 const groupService = new GroupService(Group);
 const eventService = new EventService(Event, Group);
+const pollService = new PollService(Poll, Group);
 
-// Build controllers
+// -------------------------------
+// BUILD CONTROLLERS
+// -------------------------------
 const authController = authControllerFactory(authService);
 const groupController = groupControllerFactory(groupService);
 const eventController = eventControllerFactory(eventService);
+const pollController = pollControllerFactory(pollService);
 
-// Mount routes
-app.use('/api', authRoutesFactory(authController));
-app.use('/api/groups', groupRoutesFactory(groupController)); 
-app.use('/api/events', eventRoutesFactory(eventController));
+// -------------------------------
+// MOUNT ROUTES
+// -------------------------------
+app.use("/api/auth", authRoutesFactory(authController)); // /api/auth/signup, /api/auth/login
+app.use("/api/groups", groupRoutesFactory(groupController)); // /api/groups/...
+app.use("/api/events", eventRoutesFactory(eventController)); // /api/events/...
+app.use("/api/polls", pollRoutesFactory(pollController));
 
+// -------------------------------
+// SOCKET.IO WRAPPER
+// -------------------------------
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
+
+// -------------------------------
+// SOCKET.IO EVENT HANDLERS
+// -------------------------------
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  // Join real-time group room
+  socket.on("joinGroup", (groupId) => {
+    socket.join(groupId);
+    console.log(`User ${socket.id} joined group ${groupId}`);
+  });
+
+  // Chat feature
+  socket.on("chatMessage", (msg) => {
+    io.to(msg.groupId).emit("chatMessage", msg);
+  });
+
+  // Poll created
+  socket.on("newPoll", (poll) => {
+    io.to(poll.groupId).emit("newPoll", poll);
+  });
+
+  // Poll vote updated
+  socket.on("pollUpdate", (poll) => {
+    io.to(poll.groupId).emit("pollUpdate", poll);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
+
+// -------------------------------
+// START SERVER
+// -------------------------------
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () =>
+  console.log(`Server running on port ${PORT}`)
+);
