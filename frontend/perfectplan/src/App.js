@@ -59,7 +59,7 @@ function App() {
       setView("login");
     } catch (err) {
       console.error(err);
-      alert("Signup failed");
+      alert(`Error: ${err.response.data.message}`);
     }
   };
 
@@ -78,7 +78,7 @@ function App() {
       fetchGroups(payload.userId);
     } catch (err) {
       console.error(err);
-      alert("Login failed");
+      alert(`Error: ${err.response.data.message}`);
     }
   };
 
@@ -107,7 +107,7 @@ function App() {
       fetchGroups(userId);
     } catch (err) {
       console.error(err);
-      alert("Failed to create group");
+      alert(`Error: ${err.response.data.message}`);
     }
   };
 
@@ -118,7 +118,7 @@ function App() {
       fetchGroups(userId);
     } catch (err) {
       console.error(err);
-      alert("Failed to join group");
+      alert(`Error: ${err.response.data.message}`);
     }
   };
 
@@ -129,7 +129,7 @@ function App() {
       fetchGroups(userId);
     } catch (err) {
       console.error(err);
-      alert("Could not leave group");
+      alert(`Error: ${err.response.data.message}`);
     }
   };
 
@@ -291,7 +291,7 @@ function App() {
 
   } catch (err) {
     console.error(err.response?.data || err);
-    alert("Failed to create poll");
+    alert(`Error: ${err.response.data.message}`);
   }
 };
 
@@ -305,7 +305,7 @@ const deletePoll = async (pollId) => {
     setPolls((prev) => prev.filter((p) => p._id !== pollId));
   } catch (err) {
     console.error(err);
-    alert("Failed to delete poll");
+    alert(`Error: ${err.response.data.message}`);
   }
 };
 
@@ -326,7 +326,7 @@ const votePoll = async (pollId, date) => {
       );
     } catch (err) {
       console.error(err);
-      alert("Vote failed");
+      alert(`Error: ${err.response.data.message}`);
     }
 };
 
