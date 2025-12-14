@@ -272,7 +272,7 @@ function App() {
   if (!pollQuestion.trim()) return alert("Enter a poll question");
 
   const formattedOptions = pollDates.map((d) => ({
-    date: new Date(d),
+    date: new Date(d + "T12:00:00"),
     votes: []
   }));
 
@@ -280,7 +280,7 @@ function App() {
     const res = await axios.post(`${API}/polls`, {
       groupId: selectedGroup._id,
       createdBy: userId,
-      question: pollQuestion,          // ✅ REQUIRED
+      question: pollQuestion,  
       options: formattedOptions
     });
 
@@ -288,7 +288,7 @@ function App() {
 
     setPolls((prev) => [...prev, res.data]);
     setPollDates([]);
-    setPollQuestion("");               // reset input
+    setPollQuestion("");  
 
   } catch (err) {
     console.error(err.response?.data || err);
