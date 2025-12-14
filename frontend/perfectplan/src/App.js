@@ -74,6 +74,7 @@ function App() {
       setUserId(payload.userId);
       setUserName(payload.username);
 
+      document.getElementById("pass").value='';
       setView("groups");
       fetchGroups(payload.userId);
     } catch (err) {
@@ -372,6 +373,7 @@ const votePoll = async (pollId, date) => {
         />
         <br />
         <input
+          id="pass"
           type="password"
           name="password"
           placeholder="Password"
