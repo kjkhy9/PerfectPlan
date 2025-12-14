@@ -467,7 +467,8 @@ const votePoll = async (pollId, date) => {
         <ul>
           {events.map((e) => (
             <li key={e._id}>
-              <b>{e.title}</b> — {new Date(e.date).toLocaleDateString()}
+              {/* A bit messy and long, but it works. There's likely a better implementation */}
+              <b>{e.title}</b> — {`${e.date.split("-")[1]}/${e.date.split("-")[2].substring(0,2)}/${e.date.split("-")[0]}`}
               <br />
               {e.description}
             </li>
