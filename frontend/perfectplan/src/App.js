@@ -14,11 +14,18 @@ function App() {
     code: "",
   });
 
-  const [eventForm, setEventForm] = useState({
-    title: "",
-    description: "",
-    date: "",
-  });
+  const isGroupOwner =
+    selectedGroup &&
+    (
+      selectedGroup.creator === userId ||
+      selectedGroup.creator?._id === userId
+    );
+
+  const isGuest = 
+    selectedGroup && 
+    selectedGroup.guest?.some(u => u._id === userId);
+
+  const [eventForm, setEventForm] = useState({title: "", description: "", date: "",});
 
   const [token, setToken] = useState("");
   const [userId, setUserId] = useState("");
@@ -27,7 +34,6 @@ function App() {
   
 
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const isGroupOwner = selectedGroup?.creator === userId;
   const [events, setEvents] = useState([]);
   const [plannerEvents, setPlannerEvents] = useState([]);
 
@@ -104,7 +110,7 @@ function App() {
         userId,
       });
 
-      alert(`Group created! Invite code: ${res.data.inviteCode}`);
+      alert(`Group created! Invite code: ${res.data.inviteCode}, Guest code: ${res.data.guestCode}`);
       fetchGroups(userId);
     } catch (err) {
       console.error(err);
@@ -416,7 +422,12 @@ const votePoll = async (pollId, date) => {
         <ul>
           {groups.created.map((g) => (
             <li key={g._id}>
-              {g.name} ({g.inviteCode})
+              <b>{g.name}</b>
+              <br />
+              <span> Member Code: <code>{g.inviteCode}</code></span> 
+              <br />
+              <span> Guest Code: <code>{g.guestCode}</code></span>
+              <br />
               <button onClick={() => openEventPage(g)}>Events</button>
               <button onClick={() => openChat(g)}>Chat</button>
               <button onClick={() => leaveGroup(g._id)}>Leave</button>
@@ -436,6 +447,18 @@ const votePoll = async (pollId, date) => {
           ))}
         </ul>
 
+        <h3>Guest Groups (Read-Only)</h3>
+        <ul>
+          {groups.guest?.map((g) => (
+            <li key={g._id}>
+              {g.name}
+              <button onClick={() => openEventPage(g)}>Events</button>
+              <button onClick={() => openChat(g)}>Chat</button>
+              <button onClick={() => leaveGroup(g._id)}>Leave</button>
+            </li>
+          ))}
+        </ul>
+
         <button onClick={() => setView("login")}>Log Out</button>
       </div>
     );
@@ -445,26 +468,15 @@ const votePoll = async (pollId, date) => {
     return (
       <div>
         <h2>Events for {selectedGroup.name}</h2>
-
-        <h3>Create Event</h3>
-        <input
-          name="title"
-          placeholder="Title"
-          onChange={handleEventChange}
-        />
-        <br />
-        <input
-          name="description"
-          placeholder="Description"
-          onChange={handleEventChange}
-        />
-        <br />
-        <input type="date" name="date" onChange={handleEventChange} />
-        <br />
-        <button onClick={createEvent}>Create Event</button>
-
-        <hr />
-
+        {isGroupOwner && (
+          <div style={{ marginBottom: 20 }}>
+            <h3>Create Event</h3>
+            <input name="title" placeholder="Title" onChange={handleEventChange}/>
+            <input name="description" placeholder="Description" onChange={handleEventChange}/>
+            <input type="date" name="date" onChange={handleEventChange} />
+            <button onClick={createEvent}>Create Event</button>
+          </div>
+        )}
         <h3>Upcoming Events</h3>
         <ul>
           {events.map((e) => (
@@ -527,13 +539,13 @@ const votePoll = async (pollId, date) => {
         </div>
 
         {/* SEND CHAT MESSAGE */}
-        <input
-          value={chatInput}
-          onChange={(e) => setChatInput(e.target.value)}
-          placeholder="Type message..."
-        />
-        <button onClick={sendChatMessage}>Send</button>
-
+        {!isGuest && (
+         <>
+          <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Type message..." />
+          <button onClick={sendChatMessage}>Send</button>
+        </>
+        )}
+        {isGuest && (<p><i>Guests have read-only access</i></p>)}
         <hr />
 
         {/* POLLS SECTION */}
@@ -596,7 +608,7 @@ const votePoll = async (pollId, date) => {
               {!poll.isClosed &&
                 poll.options.map((opt, i) => (
                   <div key={i}>
-                    <button onClick={() => votePoll(poll._id, opt.date)}>
+                    <button disabled={isGuest} onClick={() => votePoll(poll._id, opt.date)}>
                       {new Date(opt.date).toLocaleDateString()}
                     </button>
                     {" — "}

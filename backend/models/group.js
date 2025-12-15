@@ -2,10 +2,15 @@
 const mongoose = require('mongoose');
 
 const groupSchema = new mongoose.Schema({
-  name: String,
-  inviteCode: String,
-  creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  name: { type: String, required: true },
+
+  inviteCode: { type: String, required: true },
+  guestCode: { type: String, required: true },
+
+  creator: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+
+  members: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  guest: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
 });
 
 module.exports = mongoose.model('Group', groupSchema);
