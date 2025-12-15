@@ -1,38 +1,362 @@
-.App {
-  text-align: center;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  padding: 20px;
 }
 
-.App-link {
-  color: #61dafb;
+.App {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 40px;
+  animation: fadeIn 0.5s ease-in;
 }
 
-@keyframes App-logo-spin {
+@keyframes fadeIn {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
+    transform: translateY(20px);
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+h2 {
+  color: #2d3748;
+  font-size: 28px;
+  margin-bottom: 24px;
+  font-weight: 700;
+}
+
+h3 {
+  color: #4a5568;
+  font-size: 20px;
+  margin: 24px 0 16px;
+  font-weight: 600;
+}
+
+h4 {
+  color: #4a5568;
+  font-size: 16px;
+  margin: 16px 0 12px;
+  font-weight: 600;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input:not([type]) {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.password-input-container {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.password-input-container input {
+  margin-bottom: 0;
+  padding-right: 48px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 8px;
+  margin: 0;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.password-toggle:hover {
+  background: rgba(102, 126, 234, 0.1);
+  transform: translateY(-50%);
+  box-shadow: none;
+}
+
+input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 4px;
+  font-family: inherit;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.btn-secondary:hover {
+  background: #cbd5e0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+}
+
+.btn-danger:hover {
+  box-shadow: 0 8px 20px rgba(245, 101, 101, 0.4);
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+}
+
+li:hover {
+  border-color: #cbd5e0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateX(4px);
+}
+
+li b {
+  color: #2d3748;
+  font-size: 16px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+code {
+  background: #edf2f7;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #667eea;
+  font-family: 'Courier New', monospace;
+}
+
+hr {
+  border: none;
+  border-top: 2px solid #e2e8f0;
+  margin: 32px 0;
+}
+
+p {
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 8px 0;
+}
+
+.chat-container {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  height: 300px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  background: #f7fafc;
+}
+
+.chat-message {
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border-left: 3px solid #667eea;
+}
+
+.chat-message b {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.poll-container {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  background: #f7fafc;
+}
+
+.poll-option {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+  gap: 12px;
+}
+
+.input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.input-group input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.input-group button {
+  flex-shrink: 0;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.auth-container {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.welcome-screen {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.welcome-screen button {
+  width: 100%;
+}
+
+.text-muted {
+  color: #718096;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #667eea;
+  color: white;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.event-time {
+  color: #718096;
+  font-size: 14px;
+  margin: 4px 0;
+}
+
+.group-codes {
+  font-size: 13px;
+  color: #718096;
+  margin: 8px 0;
+}
+
+.welcome-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px;
+  border-radius: 12px;
+  margin: -40px -40px 32px -40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.welcome-header h2 {
+  color: white;
+  margin: 0;
+}
+
+.welcome-header button {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.welcome-header button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 768px) {
+  .App {
+    padding: 24px;
+  }
+  
+  .welcome-header {
+    margin: -24px -24px 24px -24px;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  button {
+    width: 100%;
+  }
+  
+  .button-group {
+    flex-direction: column;
   }
 }

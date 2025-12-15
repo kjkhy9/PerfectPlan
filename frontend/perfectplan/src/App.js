@@ -1,52 +1,50 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
+import "./App.css";
 
 const API = "http://localhost:5000/api";
 
 function App() {
-  const [view, setView] = useState("signup");
-
+  const [view, setView] = useState("welcome");
   const [form, setForm] = useState({
     username: "",
     password: "",
     group: "",
     code: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
 
-
-  const [eventForm, setEventForm] = useState({title: "", description: "", date: "", startTime: "", endTime: "",});
+  const [eventForm, setEventForm] = useState({
+    title: "",
+    description: "",
+    date: "",
+    startTime: "",
+    endTime: "",
+  });
 
   const [token, setToken] = useState("");
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("");
   const [groups, setGroups] = useState({ created: [], joined: [] });
-  
 
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [events, setEvents] = useState([]);
   const [plannerEvents, setPlannerEvents] = useState([]);
 
-    const isGroupOwner =
+  const isGroupOwner =
     selectedGroup &&
-    (
-      selectedGroup.creator === userId ||
-      selectedGroup.creator?._id === userId
-    );
-    const isGuest = 
-      selectedGroup && 
-      selectedGroup.guest?.some(u => u._id === userId);
+    (selectedGroup.creator === userId || selectedGroup.creator?._id === userId);
+  const isGuest =
+    selectedGroup && selectedGroup.guest?.some((u) => u._id === userId);
 
-  // Chat + socket
   const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
 
-  // Poll state (date-based)
   const [polls, setPolls] = useState([]);
   const [pollOptions, setPollOptions] = useState([]);
   const [pollQuestion, setPollQuestion] = useState("");
-
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -54,18 +52,14 @@ function App() {
   const handleEventChange = (e) =>
     setEventForm({ ...eventForm, [e.target.name]: e.target.value });
 
-  // -------------------------
-  // AUTH
-  // -------------------------
-
   const signup = async () => {
     try {
       await axios.post(`${API}/auth/signup`, form);
-      alert("Account created!");
+      alert("Account created successfully!");
       setView("login");
     } catch (err) {
       console.error(err);
-      alert(`Error: ${err.response.data.message}`);
+      alert(`Error: ${err.response?.data?.message || "Signup failed"}`);
     }
   };
 
@@ -73,25 +67,17 @@ function App() {
     try {
       const res = await axios.post(`${API}/auth/login`, form);
       const t = res.data.token;
-
       setToken(t);
       const payload = JSON.parse(atob(t.split(".")[1]));
-
       setUserId(payload.userId);
       setUserName(payload.username);
-
-      document.getElementById("pass").value='';
       setView("groups");
       fetchGroups(payload.userId);
     } catch (err) {
       console.error(err);
-      alert(`Error: ${err.response.data.message}`);
+      alert(`Error: ${err.response?.data?.message || "Login failed"}`);
     }
   };
-
-  // -------------------------
-  // GROUPS
-  // -------------------------
 
   const fetchGroups = async (id) => {
     try {
@@ -109,46 +95,43 @@ function App() {
         name: form.group,
         userId,
       });
-
-      alert(`Group created! Invite code: ${res.data.inviteCode}, Guest code: ${res.data.guestCode}`);
+      alert(
+        `Group created!\n\nMember Code: ${res.data.inviteCode}\nGuest Code: ${res.data.guestCode}`
+      );
       fetchGroups(userId);
     } catch (err) {
       console.error(err);
-      alert(`Error: ${err.response.data.message}`);
+      alert(`Error: ${err.response?.data?.message || "Failed to create group"}`);
     }
   };
 
   const joinGroup = async () => {
     try {
       await axios.post(`${API}/groups/join`, { code: form.code, userId });
-      alert("Joined group!");
+      alert("Successfully joined group!");
       fetchGroups(userId);
     } catch (err) {
       console.error(err);
-      alert(`Error: ${err.response.data.message}`);
+      alert(`Error: ${err.response?.data?.message || "Failed to join group"}`);
     }
   };
 
   const leaveGroup = async (groupId) => {
+    if (!window.confirm("Are you sure you want to leave this group?")) return;
     try {
       await axios.post(`${API}/groups/leave`, { groupId, userId });
-      alert("Left group");
+      alert("Left group successfully");
       fetchGroups(userId);
     } catch (err) {
       console.error(err);
-      alert(`Error: ${err.response.data.message}`);
+      alert(`Error: ${err.response?.data?.message || "Failed to leave group"}`);
     }
   };
-
-  // -------------------------
-  // EVENTS
-  // -------------------------
 
   const openEventPage = async (group) => {
     try {
       setSelectedGroup(group);
       setView("events");
-
       const res = await axios.get(`${API}/events/group/${group._id}`);
       setEvents(res.data);
     } catch (err) {
@@ -159,7 +142,6 @@ function App() {
 
   const createEvent = async () => {
     if (!selectedGroup) return;
-
     const { title, description, date, startTime, endTime } = eventForm;
 
     if (!date || !startTime || !endTime) {
@@ -184,11 +166,10 @@ function App() {
         endTime: end,
         userId,
       });
-
       const res = await axios.get(`${API}/events/group/${selectedGroup._id}`);
       setEvents(res.data);
-
-      alert("Event created!");
+      setEventForm({ title: "", description: "", date: "", startTime: "", endTime: "" });
+      alert("Event created successfully!");
     } catch (err) {
       console.error(err);
       alert("Failed to create event");
@@ -196,16 +177,15 @@ function App() {
   };
 
   const deleteEvent = async (eventId) => {
+    if (!window.confirm("Delete this event?")) return;
     try {
       await axios.delete(`${API}/events/${eventId}`);
-
       setEvents((prev) => prev.filter((e) => e._id !== eventId));
     } catch (err) {
       console.error(err);
       alert("Failed to delete event");
     }
   };
-
 
   const openMasterPlanner = async () => {
     try {
@@ -218,27 +198,20 @@ function App() {
     }
   };
 
-  // -------------------------
-  // CHAT + POLLS
-  // -------------------------
-
   const openChat = async (group) => {
     setSelectedGroup(group);
     setView("chat");
     setMessages([]);
     setPolls([]);
 
-    // create socket only once
     if (!socket) {
       const newSocket = io("http://localhost:5000");
       setSocket(newSocket);
 
-      // receive chat messages
       newSocket.on("chatMessage", (msg) => {
         setMessages((prev) => [...prev, msg]);
       });
 
-      // new poll created
       newSocket.on("newPoll", (poll) => {
         setPolls((prev) => {
           const existing = prev.find((p) => p._id === poll._id);
@@ -249,38 +222,30 @@ function App() {
         });
       });
 
-      // poll updated (new vote)
       newSocket.on("pollUpdate", (poll) => {
-        setPolls((prev) =>
-          prev.map((p) => (p._id === poll._id ? poll : p))
-        );
+        setPolls((prev) => prev.map((p) => (p._id === poll._id ? poll : p)));
       });
 
-      // join room once socket is ready
       newSocket.emit("joinGroup", group._id);
     } else {
       socket.emit("joinGroup", group._id);
     }
 
-    // fetch existing polls for this group
     try {
       const res = await axios.get(`${API}/polls/group/${group._id}`);
       setPolls(res.data);
     } catch (err) {
       console.error(err);
-      // chat still works even if polls fail
     }
   };
 
   const sendChatMessage = () => {
     if (!chatInput.trim() || !socket || !selectedGroup) return;
-
     const msg = {
       text: chatInput,
       user: userName,
       groupId: selectedGroup._id,
     };
-
     socket.emit("chatMessage", msg);
     setChatInput("");
   };
@@ -374,249 +339,404 @@ const votePoll = async (pollId, optionId) => {
       );
     } catch (err) {
       console.error(err);
-      alert(`Error: ${err.response.data.message}`);
+      alert(`Error: ${err.response?.data?.message || "Failed to vote"}`);
     }
-};
+  };
 
-  // -------------------------
-  // VIEWS
-  // -------------------------
+  // AUTH VIEWS
+  if (view === "welcome")
+    return (
+      <div className="App">
+        <div className="auth-container welcome-screen">
+          <h1 style={{ fontSize: '36px', marginBottom: '16px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            Welcome! 👋
+          </h1>
+          <p style={{ fontSize: '18px', color: '#718096', marginBottom: '40px' }}>
+            Get started by creating an account or logging in
+          </p>
+          <button 
+            onClick={() => setView("signup")}
+            style={{ fontSize: '16px', padding: '16px 32px', marginBottom: '12px' }}
+          >
+            ✨ Create Account
+          </button>
+          <button 
+            className="btn-secondary"
+            onClick={() => setView("login")}
+            style={{ fontSize: '16px', padding: '16px 32px' }}
+          >
+            🔑 Login
+          </button>
+        </div>
+      </div>
+    );
 
-  // SIGNUP
   if (view === "signup")
     return (
-      <div>
-        <h2>Sign Up</h2>
-        <input
-          name="username"
-          placeholder="Username"
-          onChange={handleChange}
-        />
-        <br />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          onChange={handleChange}
-        />
-        <br />
-        <button onClick={signup}>Sign Up</button>
-        <p>
-          Already have an account?{" "}
-          <button onClick={() => setView("login")}>Login</button>
-        </p>
+      <div className="App">
+        <div className="auth-container">
+          <h2>✨ Create Account</h2>
+          <input
+            name="username"
+            placeholder="Username"
+            onChange={handleChange}
+            onKeyPress={(e) => e.key === "Enter" && signup()}
+          />
+          <div className="password-input-container">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              onChange={handleChange}
+              onKeyPress={(e) => e.key === "Enter" && signup()}
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? "👁️" : "👁️‍🗨️"}
+            </button>
+          </div>
+          <button onClick={signup}>Sign Up</button>
+          <p style={{ marginTop: 16, textAlign: "center" }}>
+            Already have an account?{" "}
+            <button className="btn-secondary" onClick={() => setView("login")}>
+              Login
+            </button>
+          </p>
+          <button 
+            className="btn-secondary" 
+            onClick={() => setView("welcome")}
+            style={{ marginTop: '8px' }}
+          >
+            ← Back
+          </button>
+        </div>
       </div>
     );
 
-  // LOGIN
   if (view === "login")
     return (
-      <div>
-        <h2>Login</h2>
-        <input
-          name="username"
-          placeholder="Username"
-          onChange={handleChange}
-        />
-        <br />
-        <input
-          id="pass"
-          type="password"
-          name="password"
-          placeholder="Password"
-          onChange={handleChange}
-        />
-        <br />
-        <button onClick={login}>Login</button>
-        <button onClick={() => setView("signup")}>Back</button>
+      <div className="App">
+        <div className="auth-container">
+          <h2>👋 Welcome Back</h2>
+          <input
+            name="username"
+            placeholder="Username"
+            onChange={handleChange}
+            onKeyPress={(e) => e.key === "Enter" && login()}
+          />
+          <div className="password-input-container">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              onChange={handleChange}
+              onKeyPress={(e) => e.key === "Enter" && login()}
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? "👁️" : "👁️‍🗨️"}
+            </button>
+          </div>
+          <button onClick={login}>Login</button>
+          <button className="btn-secondary" onClick={() => setView("welcome")}>
+            ← Back
+          </button>
+        </div>
       </div>
     );
 
-  // GROUPS
+  // GROUPS VIEW
   if (view === "groups")
     return (
-      <div>
-        <h2>Welcome, {userName}</h2>
+      <div className="App">
+        <div className="welcome-header">
+          <h2>Welcome, {userName}! 👋</h2>
+          <div className="button-group">
+            <button onClick={openMasterPlanner}>📅 Master Planner</button>
+            <button onClick={() => setView("login")}>Log Out</button>
+          </div>
+        </div>
 
-        <button onClick={openMasterPlanner}>Open Master Planner</button>
+        <div className="section">
+          <h3>🆕 Create Group</h3>
+          <input
+            name="group"
+            placeholder="Enter group name"
+            onChange={handleChange}
+          />
+          <button onClick={createGroup}>Create Group</button>
+        </div>
 
-        <h3>Create Group</h3>
-        <input
-          name="group"
-          placeholder="Group Name"
-          onChange={handleChange}
-        />
-        <br />
-        <button onClick={createGroup}>Create</button>
-
-        <h3>Join Group</h3>
-        <input
-          name="code"
-          placeholder="Invite Code"
-          onChange={handleChange}
-        />
-        <br />
-        <button onClick={joinGroup}>Join</button>
+        <div className="section">
+          <h3>➕ Join Group</h3>
+          <input
+            name="code"
+            placeholder="Enter invite code"
+            onChange={handleChange}
+          />
+          <button onClick={joinGroup}>Join Group</button>
+        </div>
 
         <hr />
-        <h3>Your Created Groups</h3>
-        <ul>
-          {groups.created.map((g) => (
-            <li key={g._id}>
-              <b>{g.name}</b>
-              <br />
-              <span> Member Code: <code>{g.inviteCode}</code></span> 
-              <br />
-              <span> Guest Code: <code>{g.guestCode}</code></span>
-              <br />
-              <button onClick={() => openEventPage(g)}>Events</button>
-              <button onClick={() => openChat(g)}>Chat</button>
-              <button onClick={() => leaveGroup(g._id)}>Leave</button>
-            </li>
-          ))}
-        </ul>
 
-        <h3>Groups You Joined</h3>
-        <ul>
-          {groups.joined.map((g) => (
-            <li key={g._id}>
-              {g.name}
-              <button onClick={() => openEventPage(g)}>Events</button>
-              <button onClick={() => openChat(g)}>Chat</button>
-              <button onClick={() => leaveGroup(g._id)}>Leave</button>
-            </li>
-          ))}
-        </ul>
+        <h3>📁 Your Created Groups</h3>
+        {groups.created.length === 0 ? (
+          <p className="text-muted">No groups created yet</p>
+        ) : (
+          <ul>
+            {groups.created.map((g) => (
+              <li key={g._id}>
+                <b>{g.name}</b>
+                <span className="badge">Owner</span>
+                <div className="group-codes">
+                  Member Code: <code>{g.inviteCode}</code>
+                  <br />
+                  Guest Code: <code>{g.guestCode}</code>
+                </div>
+                <div className="button-group">
+                  <button onClick={() => openEventPage(g)}>📅 Events</button>
+                  <button onClick={() => openChat(g)}>💬 Chat</button>
+                  <button className="btn-danger" onClick={() => leaveGroup(g._id)}>
+                    Leave
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
 
-        <h3>Guest Groups (Read-Only)</h3>
-        <ul>
-          {groups.guest?.map((g) => (
-            <li key={g._id}>
-              {g.name}
-              <button onClick={() => openEventPage(g)}>Events</button>
-              <button onClick={() => openChat(g)}>Chat</button>
-              <button onClick={() => leaveGroup(g._id)}>Leave</button>
-            </li>
-          ))}
-        </ul>
+        <h3>👥 Groups You Joined</h3>
+        {groups.joined.length === 0 ? (
+          <p className="text-muted">No groups joined yet</p>
+        ) : (
+          <ul>
+            {groups.joined.map((g) => (
+              <li key={g._id}>
+                <b>{g.name}</b>
+                <span className="badge">Member</span>
+                <div className="button-group">
+                  <button onClick={() => openEventPage(g)}>📅 Events</button>
+                  <button onClick={() => openChat(g)}>💬 Chat</button>
+                  <button className="btn-danger" onClick={() => leaveGroup(g._id)}>
+                    Leave
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
 
-        <button onClick={() => setView("login")}>Log Out</button>
+        {groups.guest && groups.guest.length > 0 && (
+          <>
+            <h3>👁️ Guest Groups (Read-Only)</h3>
+            <ul>
+              {groups.guest.map((g) => (
+                <li key={g._id}>
+                  <b>{g.name}</b>
+                  <span className="badge">Guest</span>
+                  <div className="button-group">
+                    <button onClick={() => openEventPage(g)}>📅 Events</button>
+                    <button onClick={() => openChat(g)}>💬 Chat</button>
+                    <button className="btn-danger" onClick={() => leaveGroup(g._id)}>
+                      Leave
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </div>
     );
 
-  // EVENTS
+  // EVENTS VIEW
   if (view === "events")
     return (
-      <div>
-        <h2>Events for {selectedGroup.name}</h2>
+      <div className="App">
+        <h2>📅 Events for {selectedGroup.name}</h2>
+
         {isGroupOwner && (
-          <div style={{ marginBottom: 20 }}>
-            <h3>Create Event</h3>
-            <input name="title" placeholder="Title" onChange={handleEventChange}/>
-            <input name="description" placeholder="Description" onChange={handleEventChange}/>
-            <p>Date:</p>
-            <input type="date" name="date" onChange={handleEventChange} />
-            <p>Start Time:</p>
-            <input type="time" name="startTime" step="900" onChange={handleEventChange} />
-            <p>End Time:</p>
-            <input type="time" name="endTime" step="900" onChange={handleEventChange} />
-            <br />
+          <div className="section poll-container">
+            <h3>Create New Event</h3>
+            <input
+              name="title"
+              placeholder="Event title"
+              value={eventForm.title}
+              onChange={handleEventChange}
+            />
+            <input
+              name="description"
+              placeholder="Event description"
+              value={eventForm.description}
+              onChange={handleEventChange}
+            />
+            <label style={{ display: "block", marginTop: 8, color: "#4a5568" }}>
+              Date:
+            </label>
+            <input
+              type="date"
+              name="date"
+              value={eventForm.date}
+              onChange={handleEventChange}
+            />
+            <label style={{ display: "block", marginTop: 8, color: "#4a5568" }}>
+              Start Time:
+            </label>
+            <input
+              type="time"
+              name="startTime"
+              step="900"
+              value={eventForm.startTime}
+              onChange={handleEventChange}
+            />
+            <label style={{ display: "block", marginTop: 8, color: "#4a5568" }}>
+              End Time:
+            </label>
+            <input
+              type="time"
+              name="endTime"
+              step="900"
+              value={eventForm.endTime}
+              onChange={handleEventChange}
+            />
             <button onClick={createEvent}>Create Event</button>
           </div>
         )}
-        <h3>Upcoming Events</h3>
-        <ul>
-          {events.map((e) => (
-            <li key={e._id}>
-              <b>{e.title}</b><br />
-              {new Date(e.startTime).toLocaleString()}{" "}
-              {new Date(e.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-              {" - "}
-              {new Date(e.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-              <br />
-              {e.description}
-              
-              {isGroupOwner && (
-                <>
-                  <br />
-                  <button onClick={() => deleteEvent(e._id)}>Delete Event</button>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
 
-        <button onClick={() => setView("groups")}>Back</button>
+        <h3>Upcoming Events</h3>
+        {events.length === 0 ? (
+          <p className="text-muted">No events scheduled yet</p>
+        ) : (
+          <ul>
+            {events.map((e) => (
+              <li key={e._id}>
+                <b>{e.title}</b>
+                <div className="event-time">
+                  📅 {new Date(e.startTime).toLocaleDateString()} •{" "}
+                  {new Date(e.startTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  -{" "}
+                  {new Date(e.endTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+                <p>{e.description}</p>
+                {isGroupOwner && (
+                  <button
+                    className="btn-danger"
+                    onClick={() => deleteEvent(e._id)}
+                  >
+                    Delete Event
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <button className="btn-secondary" onClick={() => setView("groups")}>
+          ← Back to Groups
+        </button>
       </div>
     );
 
   // MASTER PLANNER
   if (view === "master")
     return (
-      <div>
-        <h2>Master Planner — All Events</h2>
-        <ul>
-          {plannerEvents.map((e) => (
-            <li key={e._id}>
-              <b>{e.title}</b> 
-              {new Date(e.startTime).toLocaleDateString()}{" "}
-              {new Date(e.startTime).toLocaleString([], {hour: '2-digit', minute:'2-digit'})} 
-              {" - "}
-              {new Date(e.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-              <br />
-              Group: {e.groupId?.name}
-              <br />
-              Created by: {e.createdBy?.username}
-              <br />
-              {e.description}
-            </li>
-          ))}
-        </ul>
-
-        <button onClick={() => setView("groups")}>Back</button>
+      <div className="App">
+        <h2>📅 Master Planner — All Events</h2>
+        {plannerEvents.length === 0 ? (
+          <p className="text-muted">No events scheduled yet</p>
+        ) : (
+          <ul>
+            {plannerEvents.map((e) => (
+              <li key={e._id}>
+                <b>{e.title}</b>
+                <div className="event-time">
+                  📅 {new Date(e.startTime).toLocaleDateString()} •{" "}
+                  {new Date(e.startTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  -{" "}
+                  {new Date(e.endTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+                <p>
+                  <strong>Group:</strong> {e.groupId?.name}
+                </p>
+                <p>
+                  <strong>Created by:</strong> {e.createdBy?.username}
+                </p>
+                <p>{e.description}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+        <button className="btn-secondary" onClick={() => setView("groups")}>
+          ← Back to Groups
+        </button>
       </div>
     );
 
   // CHAT + POLLS
   if (view === "chat")
     return (
-      <div>
-        <h2>Group Chat — {selectedGroup.name}</h2>
+      <div className="App">
+        <h2>💬 Group Chat — {selectedGroup.name}</h2>
 
-        {/* CHAT MESSAGES */}
-        <div
-          style={{
-            border: "1px solid #ccc",
-            padding: 10,
-            height: 250,
-            overflowY: "scroll",
-            marginBottom: 20,
-          }}
-        >
-          {messages.map((m, i) => (
-            <p key={i}>
-              <b>{m.user}:</b> {m.text}
-            </p>
-          ))}
+        <div className="chat-container">
+          {messages.length === 0 ? (
+            <p className="text-muted">No messages yet. Start the conversation!</p>
+          ) : (
+            messages.map((m, i) => (
+              <div key={i} className="chat-message">
+                <b>{m.user}:</b> {m.text}
+              </div>
+            ))
+          )}
         </div>
 
-        {/* SEND CHAT MESSAGE */}
-        {!isGuest && (
-         <>
-          <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Type message..." />
-          <button onClick={sendChatMessage}>Send</button>
-        </>
+        {!isGuest ? (
+          <div className="input-group">
+            <input
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Type your message..."
+              onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
+            />
+            <button onClick={sendChatMessage}>Send</button>
+          </div>
+        ) : (
+          <p className="text-muted">
+            <i>👁️ Guests have read-only access to chat</i>
+          </p>
         )}
-        {isGuest && (<p><i>Guests have read-only access</i></p>)}
+
         <hr />
 
-        {/* POLLS SECTION */}
-        <h3>Polls</h3>
+        <h3>📊 Polls</h3>
 
-        {/* CREATE POLL */}
         {isGroupOwner && (
-          <div style={{ marginBottom: 20 }}>
+          <div className="poll-container">
             <h4>Create Poll</h4>
+            <input
+              type="text"
+              placeholder="Poll question (e.g., 'When should we meet?')"
+              value={pollQuestion}
+              onChange={(e) => setPollQuestion(e.target.value)}
+            />
 
             {pollOptions.map((opt, i) => (
               <div key={i}>
@@ -637,7 +757,12 @@ const votePoll = async (pollId, optionId) => {
                   value={opt.endTime}
                   onChange={(e) => updatePollOption(i, "endTime", e.target.value)}
                 />
-                <button onClick={() => removePollDate(i)}>Remove</button>
+                <button
+                  className="btn-danger"
+                  onClick={() => removePollDate(i)}
+                >
+                  Remove
+                </button>
               </div>
             ))}
 
@@ -656,22 +781,13 @@ const votePoll = async (pollId, optionId) => {
           </div>
         )}
 
-
-        {/* EXISTING POLLS */}
         {polls.length === 0 ? (
-          <p>No polls yet</p>
+          <p className="text-muted">No polls yet</p>
         ) : (
           polls.map((poll) => (
-            <div
-              key={poll._id}
-              style={{
-                border: "1px solid #aaa",
-                padding: 10,
-                marginBottom: 10,
-              }}
-            >
-              <b>Poll:</b> {poll.question || "Select a meeting time"}
-              <br />
+            <div key={poll._id} className="poll-container">
+              <b>📊 {poll.question || "Select a meeting time"}</b>
+
               {poll.isClosed && poll.winningDate && (
                 <p>
                   <b>
@@ -689,20 +805,27 @@ const votePoll = async (pollId, optionId) => {
                       {new Date(opt.date).toLocaleDateString()}{" "}
                       {opt.startTime} - {opt.endTime}
                     </button>
-                    {" — "}
-                    {opt.votes.length} votes
+                    <span>
+                      {opt.votes.length} vote{opt.votes.length !== 1 ? "s" : ""}
+                    </span>
                   </div>
                 ))}
+
               {poll.createdBy === userId && (
-              <button onClick={() => deletePoll(poll._id)}>
-                Delete Poll
-              </button>
+                <button
+                  className="btn-danger"
+                  onClick={() => deletePoll(poll._id)}
+                >
+                  Delete Poll
+                </button>
               )}
             </div>
           ))
         )}
 
-        <button onClick={() => setView("groups")}>Back</button>
+        <button className="btn-secondary" onClick={() => setView("groups")}>
+          ← Back to Groups
+        </button>
       </div>
     );
 
