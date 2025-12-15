@@ -19,11 +19,14 @@ it("guest cannot create event", async () => {
 
   // create group with owner + guest
   const group = await Group.create({
-    name: "Test Group",
-    creator: owner._id,
-    members: [owner._id],
-    guest: [guest._id],
+  name: "Test Group",
+  creator: owner._id,
+  members: [owner._id],
+  guest: [guest._id],
+  inviteCode: "INVITE123",
+  guestCode: "GUEST123",
   });
+
 
   const res = await request(app)
     .post("/api/events")
