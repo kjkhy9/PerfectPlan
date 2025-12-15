@@ -23,7 +23,7 @@ module.exports = (eventService) => ({
       res.json(event);
     } catch (err) {
       console.error("Create event error:", err);
-      res.status(400).json({ message: err.message });
+      res.status(err.statusCode || 400).json({ message: err.message });
     }
   },
 

@@ -17,6 +17,17 @@ class EventService {
       userId,
     } = data;
 
+    const group = await this.Group.findById(groupId);
+    if (!group) {
+      throw new Error("Group not found");
+    }
+
+    if (group.creator.toString() !== userId){
+      const err = new Error("Only group owners can create events");
+      err.status = 403;
+      throw err;
+    }
+
     if (!startTime || !endTime) {
       throw new Error("Start time and end time are required");
     }
