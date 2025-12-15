@@ -390,13 +390,6 @@ const votePoll = async (pollId, optionId) => {
               onChange={handleChange}
               onKeyPress={(e) => e.key === "Enter" && signup()}
             />
-            <button
-              type="button"
-              className="password-toggle"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? "👁️" : "👁️‍🗨️"}
-            </button>
           </div>
           <button onClick={signup}>Sign Up</button>
           <p style={{ marginTop: 16, textAlign: "center" }}>
@@ -435,13 +428,6 @@ const votePoll = async (pollId, optionId) => {
               onChange={handleChange}
               onKeyPress={(e) => e.key === "Enter" && login()}
             />
-            <button
-              type="button"
-              className="password-toggle"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? "👁️" : "👁️‍🗨️"}
-            </button>
           </div>
           <button onClick={login}>Login</button>
           <button className="btn-secondary" onClick={() => setView("welcome")}>
@@ -770,14 +756,6 @@ const votePoll = async (pollId, optionId) => {
             ))}
 
             <button onClick={addPollOption}>Add Time Option</button>
-            <br />
-
-            <input
-              type="text"
-              placeholder="Poll Question"
-              value={pollQuestion}
-              onChange={(e) => setPollQuestion(e.target.value)}
-            />
             <br />
 
             <button onClick={createPoll}>Create Poll</button>
