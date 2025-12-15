@@ -7,14 +7,29 @@ class EventService {
     this.Group = GroupModel;
   }
 
-  async createEvent({ groupId, title, description, date, userId }) {
+  async createEvent(data) {
+    const {
+      groupId,
+      title,
+      description,
+      startTime,
+      endTime,
+      userId,
+    } = data;
+
+    if (!startTime || !endTime) {
+      throw new Error("Start time and end time are required");
+    }
+
     const event = await this.Event.create({
       groupId,
       title,
       description,
-      date,
-      createdBy: new mongoose.Types.ObjectId(userId),
+      startTime,
+      endTime,
+      createdBy: userId,
     });
+
     return event;
   }
 

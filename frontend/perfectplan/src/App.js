@@ -14,18 +14,8 @@ function App() {
     code: "",
   });
 
-  const isGroupOwner =
-    selectedGroup &&
-    (
-      selectedGroup.creator === userId ||
-      selectedGroup.creator?._id === userId
-    );
 
-  const isGuest = 
-    selectedGroup && 
-    selectedGroup.guest?.some(u => u._id === userId);
-
-  const [eventForm, setEventForm] = useState({title: "", description: "", date: "",});
+  const [eventForm, setEventForm] = useState({title: "", description: "", date: "", startTime: "", endTime: "",});
 
   const [token, setToken] = useState("");
   const [userId, setUserId] = useState("");
@@ -36,6 +26,16 @@ function App() {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [events, setEvents] = useState([]);
   const [plannerEvents, setPlannerEvents] = useState([]);
+
+    const isGroupOwner =
+    selectedGroup &&
+    (
+      selectedGroup.creator === userId ||
+      selectedGroup.creator?._id === userId
+    );
+    const isGuest = 
+      selectedGroup && 
+      selectedGroup.guest?.some(u => u._id === userId);
 
   // Chat + socket
   const [socket, setSocket] = useState(null);
@@ -159,12 +159,29 @@ function App() {
 
   const createEvent = async () => {
     if (!selectedGroup) return;
+
+    const { title, description, date, startTime, endTime } = eventForm;
+
+    if (!date || !startTime || !endTime) {
+      alert("Date, start time, and end time are required");
+      return;
+    }
+
+    const start = new Date(`${date}T${startTime}`);
+    const end = new Date(`${date}T${endTime}`);
+
+    if (end <= start) {
+      alert("End time must be after start time");
+      return;
+    }
+
     try {
       await axios.post(`${API}/events`, {
         groupId: selectedGroup._id,
-        title: eventForm.title,
-        description: eventForm.description,
-        date: eventForm.date,
+        title,
+        description,
+        startTime: start,
+        endTime: end,
         userId,
       });
 
@@ -177,6 +194,18 @@ function App() {
       alert("Failed to create event");
     }
   };
+
+  const deleteEvent = async (eventId) => {
+    try {
+      await axios.delete(`${API}/events/${eventId}`);
+
+      setEvents((prev) => prev.filter((e) => e._id !== eventId));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete event");
+    }
+  };
+
 
   const openMasterPlanner = async () => {
     try {
@@ -473,7 +502,13 @@ const votePoll = async (pollId, date) => {
             <h3>Create Event</h3>
             <input name="title" placeholder="Title" onChange={handleEventChange}/>
             <input name="description" placeholder="Description" onChange={handleEventChange}/>
+            <p>Date:</p>
             <input type="date" name="date" onChange={handleEventChange} />
+            <p>Start Time:</p>
+            <input type="time" name="startTime" step="900" onChange={handleEventChange} />
+            <p>End Time:</p>
+            <input type="time" name="endTime" step="900" onChange={handleEventChange} />
+            <br />
             <button onClick={createEvent}>Create Event</button>
           </div>
         )}
@@ -481,9 +516,20 @@ const votePoll = async (pollId, date) => {
         <ul>
           {events.map((e) => (
             <li key={e._id}>
-              <b>{e.title}</b> — {new Date(e.date).toLocaleDateString()}
+              <b>{e.title}</b><br />
+              {new Date(e.startTime).toLocaleString()}{" "}
+              {new Date(e.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+              {" - "}
+              {new Date(e.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
               <br />
               {e.description}
+              
+              {isGroupOwner && (
+                <>
+                  <br />
+                  <button onClick={() => deleteEvent(e._id)}>Delete Event</button>
+                </>
+              )}
             </li>
           ))}
         </ul>
@@ -500,7 +546,11 @@ const votePoll = async (pollId, date) => {
         <ul>
           {plannerEvents.map((e) => (
             <li key={e._id}>
-              <b>{e.title}</b> ({new Date(e.date).toLocaleDateString()})
+              <b>{e.title}</b> 
+              {new Date(e.startTime).toLocaleDateString()}{" "}
+              {new Date(e.startTime).toLocaleString([], {hour: '2-digit', minute:'2-digit'})} 
+              {" - "}
+              {new Date(e.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
               <br />
               Group: {e.groupId?.name}
               <br />
@@ -559,7 +609,7 @@ const votePoll = async (pollId, date) => {
             {pollDates.map((d, i) => (
               <div key={i}>
                 <input
-                  type="date"
+                  type="datetime-local"
                   value={d}
                   onChange={(e) => updatePollDate(i, e.target.value)}
                 />
@@ -600,7 +650,7 @@ const votePoll = async (pollId, date) => {
                 <p>
                   <b>
                     Final Date:{" "}
-                    {new Date(poll.winningDate).toLocaleDateString()}
+                    {new Date(poll.winningDate).toLocaleString()}
                   </b>
                 </p>
               )}
@@ -609,7 +659,7 @@ const votePoll = async (pollId, date) => {
                 poll.options.map((opt, i) => (
                   <div key={i}>
                     <button disabled={isGuest} onClick={() => votePoll(poll._id, opt.date)}>
-                      {new Date(opt.date).toLocaleDateString()}
+                      {new Date(opt.date).toLocaleString()}
                     </button>
                     {" — "}
                     {opt.votes.length} votes

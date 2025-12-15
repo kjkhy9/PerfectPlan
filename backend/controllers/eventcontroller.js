@@ -2,12 +2,28 @@
 module.exports = (eventService) => ({
   createEvent: async (req, res) => {
     try {
-      const { groupId, title, description, date, userId } = req.body;
-      const event = await eventService.createEvent({ groupId, title, description, date, userId });
+      const {
+        groupId,
+        title,
+        description,
+        startTime,
+        endTime,
+        userId,
+      } = req.body;
+
+      const event = await eventService.createEvent({
+        groupId,
+        title,
+        description,
+        startTime,
+        endTime,
+        userId,
+      });
+
       res.json(event);
     } catch (err) {
       console.error("Create event error:", err);
-      res.status(500).json({ message: "Server error creating event" });
+      res.status(400).json({ message: err.message });
     }
   },
 
