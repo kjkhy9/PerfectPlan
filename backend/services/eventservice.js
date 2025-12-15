@@ -24,7 +24,7 @@ class EventService {
 
     if (group.creator.toString() !== userId){
       const err = new Error("Only group owners can create events");
-      err.status = 403;
+      err.statusCode = 403;
       throw err;
     }
 
