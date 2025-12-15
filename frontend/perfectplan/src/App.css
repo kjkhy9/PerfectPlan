@@ -274,6 +274,15 @@ p {
   margin: 0 auto;
 }
 
+.welcome-screen {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.welcome-screen button {
+  width: 100%;
+}
+
 .text-muted {
   color: #718096;
   font-size: 14px;

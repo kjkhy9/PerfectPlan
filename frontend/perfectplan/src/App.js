@@ -6,7 +6,7 @@ import "./App.css";
 const API = "http://localhost:5000/api";
 
 function App() {
-  const [view, setView] = useState("signup");
+  const [view, setView] = useState("welcome");
   const [form, setForm] = useState({
     username: "",
     password: "",
@@ -316,6 +316,33 @@ function App() {
   };
 
   // AUTH VIEWS
+  if (view === "welcome")
+    return (
+      <div className="App">
+        <div className="auth-container welcome-screen">
+          <h1 style={{ fontSize: '36px', marginBottom: '16px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            Welcome! 👋
+          </h1>
+          <p style={{ fontSize: '18px', color: '#718096', marginBottom: '40px' }}>
+            Get started by creating an account or logging in
+          </p>
+          <button 
+            onClick={() => setView("signup")}
+            style={{ fontSize: '16px', padding: '16px 32px', marginBottom: '12px' }}
+          >
+            ✨ Create Account
+          </button>
+          <button 
+            className="btn-secondary"
+            onClick={() => setView("login")}
+            style={{ fontSize: '16px', padding: '16px 32px' }}
+          >
+            🔑 Login
+          </button>
+        </div>
+      </div>
+    );
+
   if (view === "signup")
     return (
       <div className="App">
@@ -350,6 +377,13 @@ function App() {
               Login
             </button>
           </p>
+          <button 
+            className="btn-secondary" 
+            onClick={() => setView("welcome")}
+            style={{ marginTop: '8px' }}
+          >
+            ← Back
+          </button>
         </div>
       </div>
     );
@@ -382,8 +416,8 @@ function App() {
             </button>
           </div>
           <button onClick={login}>Login</button>
-          <button className="btn-secondary" onClick={() => setView("signup")}>
-            Back
+          <button className="btn-secondary" onClick={() => setView("welcome")}>
+            ← Back
           </button>
         </div>
       </div>
