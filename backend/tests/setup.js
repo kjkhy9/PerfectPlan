@@ -3,6 +3,9 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 
 let mongo;
 
+process.env.NODE_ENV = "test";
+process.env.JWT_SECRET = "test-secret";
+
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
   const uri = mongo.getUri();

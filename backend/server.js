@@ -42,10 +42,11 @@ app.use(express.json());
 // -------------------------------
 // CONNECT TO DATABASE
 // -------------------------------
-connectToDatabase(process.env.MONGO_URI).catch((err) => {
-  console.error("MongoDB connection error:", err);
-});
-
+if (process.env.NODE_ENV !== "test"){
+  connectToDatabase(process.env.MONGO_URI).catch((err) => {
+    console.error("MongoDB connection error:", err);
+  });
+}
 // -------------------------------
 // BUILD SERVICES
 // -------------------------------

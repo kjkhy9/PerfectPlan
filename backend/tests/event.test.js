@@ -1,3 +1,6 @@
+const request = require("supertest");
+const app = require("../server");
+
 it("guest cannot create event", async () => {
   const res = await request(app)
     .post("/api/events")
