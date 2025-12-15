@@ -285,7 +285,7 @@ function App() {
         }
 
         return {
-          date: new Date(opt.date),
+          date: new Date(opt.date + "T12:00:00"),
           startTime: opt.startTime,
           endTime: opt.endTime,
           votes: []
@@ -666,8 +666,11 @@ const votePoll = async (pollId, optionId) => {
                   {new Date(e.startTime).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
-                  })}{" "}
-                  -{" "}
+
+                  })}
+                  {" "}
+                  -
+                  {" "}
                   {new Date(e.endTime).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
