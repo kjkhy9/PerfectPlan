@@ -8,6 +8,8 @@ const pollSchema = new mongoose.Schema({
   options: [
     {
       date: { type: Date, required: true },
+      startTime: { type: String, required: true },
+      endTime: { type: String, required: true },
       votes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
     }
   ],
@@ -23,7 +25,7 @@ const pollSchema = new mongoose.Schema({
   ],
 
   isClosed: { type: Boolean, default: false },
-  winningDate: { type: Date, default: null }
+  winningDate: { type: Number, default: null }
 });
 
 module.exports = mongoose.model("Poll", pollSchema);

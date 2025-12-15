@@ -1,3 +1,5 @@
+const poll = require("../models/poll");
+
 module.exports = (pollService) => ({
   createPoll: async (req, res) => {
     try {

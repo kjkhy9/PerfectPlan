@@ -23,20 +23,18 @@ class PollService {
     });
   }
 
-  async vote({ pollId, userId, selectedDate }) {
+  async vote({ pollId, userId, optionId }) {
     const poll = await this.Poll.findById(pollId);
     if (!poll) throw new Error("Poll not found");
+
+    const option = poll.options.id(optionId);
+    if (!option) throw new Error("Invalid date option");
 
     // Prevent double voting
     const alreadyVoted = poll.options.some(opt =>
       opt.votes.includes(userId)
     );
     if (alreadyVoted) throw new Error("User already voted");
-
-    const option = poll.options.find(
-      o => o.date.toISOString() === new Date(selectedDate).toISOString()
-    );
-    if (!option) throw new Error("Invalid date option");
 
     option.votes.push(userId);
     await poll.save();

@@ -44,7 +44,7 @@ function App() {
 
   // Poll state (date-based)
   const [polls, setPolls] = useState([]);
-  const [pollDates, setPollDates] = useState([]);
+  const [pollOptions, setPollOptions] = useState([]);
   const [pollQuestion, setPollQuestion] = useState("");
 
 
@@ -287,50 +287,62 @@ function App() {
 
   // Poll helper functions (date-based)
 
-  const addPollDate = () => {
-    setPollDates([...pollDates, ""]);
+  const addPollOption = () => {
+    setPollOptions([...pollOptions, { date: "", startTime: "", endTime: "" }]);
   };
 
-  const updatePollDate = (index, value) => {
-    const updated = [...pollDates];
-    updated[index] = value;
-    setPollDates(updated);
+  const updatePollOption = (index, field, value) => {
+    const updated = [...pollOptions];
+    updated[index][field] = value;
+    setPollOptions(updated);
   };
 
   const removePollDate = (index) => {
-    setPollDates(pollDates.filter((_, i) => i !== index));
+    setPollOptions(pollOptions.filter((_, i) => i !== index));
   };
 
   const createPoll = async () => {
-  if (!selectedGroup) return;
-  if (pollDates.length === 0) return alert("Add at least one date");
-  if (!pollQuestion.trim()) return alert("Enter a poll question");
+    if (!selectedGroup) return;
+    if (pollOptions.length === 0) return alert("Add at least one option");
+    if (!pollQuestion.trim()) return alert("Enter a poll question");
 
-  const formattedOptions = pollDates.map((d) => ({
-    date: new Date(d + "T12:00:00"),
-    votes: []
-  }));
+    try {
+      const formattedOptions = pollOptions.map((opt) => {
+        if (!opt.date || !opt.startTime || !opt.endTime) {
+          throw new Error("Each option needs date, start time, and end time");
+        }
 
-  try {
-    const res = await axios.post(`${API}/polls`, {
-      groupId: selectedGroup._id,
-      createdBy: userId,
-      question: pollQuestion,  
-      options: formattedOptions
-    });
+        const start = new Date(`${opt.date}T${opt.startTime}`);
+        const end = new Date(`${opt.date}T${opt.endTime}`);
 
-    if (socket) socket.emit("newPoll", res.data);
+        if (end <= start) {
+          throw new Error("End time must be after start time");
+        }
 
-    setPolls((prev) => [...prev, res.data]);
-    setPollDates([]);
-    setPollQuestion("");  
+        return {
+          date: new Date(opt.date),
+          startTime: opt.startTime,
+          endTime: opt.endTime,
+          votes: []
+        };
+      });
 
-  } catch (err) {
-    console.error(err.response?.data || err);
-    alert(`Error: ${err.response.data.message}`);
-  }
-};
+      const res = await axios.post(`${API}/polls`, {
+        groupId: selectedGroup._id,
+        createdBy: userId,
+        question: pollQuestion,
+        options: formattedOptions
+      });
 
+      if (socket) socket.emit("newPoll", res.data);
+
+      setPolls((prev) => [...prev, res.data]);
+      setPollOptions([]);
+      setPollQuestion("");
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
 const deletePoll = async (pollId) => {
   try {
@@ -345,15 +357,15 @@ const deletePoll = async (pollId) => {
   }
 };
 
-const votePoll = async (pollId, date) => {
+const votePoll = async (pollId, optionId) => {
     try {
       const res = await axios.post(`${API}/polls/vote`, {
         pollId,
         userId,
-        selectedDate: date,
+        optionId
       });
 
-       if (socket) {
+      if (socket) {
         socket.emit("pollUpdate", res.data);
       }
 
@@ -606,19 +618,32 @@ const votePoll = async (pollId, date) => {
           <div style={{ marginBottom: 20 }}>
             <h4>Create Poll</h4>
 
-            {pollDates.map((d, i) => (
+            {pollOptions.map((opt, i) => (
               <div key={i}>
                 <input
-                  type="datetime-local"
-                  value={d}
-                  onChange={(e) => updatePollDate(i, e.target.value)}
+                  type="date"
+                  value={opt.date}
+                  onChange={(e) => updatePollOption(i, "date", e.target.value)}
+                />
+                <input
+                  type="time"
+                  step="900"
+                  value={opt.startTime}
+                  onChange={(e) => updatePollOption(i, "startTime", e.target.value)}
+                />
+                <input
+                  type="time"
+                  step="900"
+                  value={opt.endTime}
+                  onChange={(e) => updatePollOption(i, "endTime", e.target.value)}
                 />
                 <button onClick={() => removePollDate(i)}>Remove</button>
               </div>
             ))}
 
-            <button onClick={addPollDate}>Add Date Option</button>
+            <button onClick={addPollOption}>Add Time Option</button>
             <br />
+
             <input
               type="text"
               placeholder="Poll Question"
@@ -626,6 +651,7 @@ const votePoll = async (pollId, date) => {
               onChange={(e) => setPollQuestion(e.target.value)}
             />
             <br />
+
             <button onClick={createPoll}>Create Poll</button>
           </div>
         )}
@@ -650,16 +676,18 @@ const votePoll = async (pollId, date) => {
                 <p>
                   <b>
                     Final Date:{" "}
-                    {new Date(poll.winningDate).toLocaleString()}
+                    {new Date(poll.winningDate.date).toLocaleDateString()}{" "}
+                    {poll.winningDate.startTime} - {poll.winningDate.endTime}
                   </b>
                 </p>
               )}
 
               {!poll.isClosed &&
-                poll.options.map((opt, i) => (
-                  <div key={i}>
-                    <button disabled={isGuest} onClick={() => votePoll(poll._id, opt.date)}>
-                      {new Date(opt.date).toLocaleString()}
+                poll.options.map((opt) => (
+                  <div key={opt._id}>
+                    <button disabled={isGuest} onClick={() => votePoll(poll._id, opt._id)}>
+                      {new Date(opt.date).toLocaleDateString()}{" "}
+                      {opt.startTime} - {opt.endTime}
                     </button>
                     {" — "}
                     {opt.votes.length} votes
