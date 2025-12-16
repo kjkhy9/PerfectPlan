@@ -23,7 +23,6 @@ function App() {
     endTime: "",
   });
 
-  const [token, setToken] = useState("");
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("");
   const [groups, setGroups] = useState({ created: [], joined: [] });
