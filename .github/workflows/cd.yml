@@ -25,7 +25,13 @@ jobs:
 
       - name: Run backend tests
         working-directory: backend
-        run: npm test
+        run: npm jest --coverage
+        
+      - name: Prepare the webpage
+        run: |
+          mkdir -p sites/backend
+          mv backend/coverage/lcov-report sites/backend
+          mv backend/coverage/clover.xml sites/backend
 
       - name: Deploy to Render
         run: |
@@ -49,11 +55,18 @@ jobs:
         run: npm install
 
       - name: Run frontend tests
-        run: npm test -- --watchAll=false
+        run: npm jest --coverage
+
+      - name: Prepare the webpage
+        run: |
+          mkdir -p sites/frontend
+          mv frontend/coverage/lcov-report sites/frontend
+          mv frontend/coverage/clover.xml sites/frontend
 
       - name: Build frontend
         run: npm run build
 
-  
-
-      
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./sites
