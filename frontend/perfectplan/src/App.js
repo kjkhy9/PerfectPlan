@@ -66,7 +66,6 @@ function App() {
     try {
       const res = await axios.post(`${API}/auth/login`, form);
       const t = res.data.token;
-      setToken(t);
       const payload = JSON.parse(atob(t.split(".")[1]));
       setUserId(payload.userId);
       setUserName(payload.username);
