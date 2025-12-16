@@ -27,6 +27,10 @@ jobs:
         working-directory: backend
         run: npm test
 
+      - name: Run frontend tests
+        working-directory: frontend/perfectplan
+        run: npm test -- --watch=false
+
       # ACTUAL DEPLOY
       - name: Deploy to Render
         run: |
