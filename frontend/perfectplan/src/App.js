@@ -5,6 +5,8 @@ import "./App.css";
 
 const API = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || "http://localhost:5000";
+
 function App() {
   const [view, setView] = useState("welcome");
   const [form, setForm] = useState({
@@ -203,7 +205,7 @@ function App() {
     setPolls([]);
 
     if (!socket) {
-      const newSocket = io("http://localhost:5000");
+      const newSocket = io(SOCKET_URL, { transports: ["websocket"] });
       setSocket(newSocket);
 
       newSocket.on("chatMessage", (msg) => {
