@@ -13,7 +13,7 @@ function App() {
     group: "",
     code: "",
   });
-  const [showPassword, setShowPassword] = useState(false);
+  const showPassword = false;
 
   const [eventForm, setEventForm] = useState({
     title: "",
